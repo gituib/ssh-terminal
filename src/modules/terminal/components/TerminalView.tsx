@@ -10,7 +10,7 @@ interface TerminalViewProps {
 
 export const TerminalView: FC<TerminalViewProps> = ({ sessionId, connectionId }) => {
   const terminalRef = useRef<TerminalHandle>(null);
-  const { isConnected, isConnecting, error, disconnect, sendData, connect } = useTerminal(sessionId);
+  const { isConnecting, error, disconnect, sendData, connect } = useTerminal(sessionId);
 
   useEffect(() => {
     if (connectionId && !sessionId) {

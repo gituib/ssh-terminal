@@ -1,5 +1,5 @@
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
-import { Terminal as XTerm } from 'xterm';
+import { Terminal as XTerm, type ITerminalOptions } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import { WebLinksAddon } from 'xterm-addon-web-links';
 import 'xterm/css/xterm.css';
@@ -12,7 +12,7 @@ export interface TerminalHandle {
 
 interface TerminalProps {
   onData: (data: string) => void;
-  options?: Partial<XTerm.Options>;
+  options?: Partial<ITerminalOptions>;
 }
 
 export const Terminal = forwardRef<TerminalHandle, TerminalProps>(
