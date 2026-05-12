@@ -1,0 +1,25 @@
+.list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.loading,
+.error,
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.error {
+  color: var(--color-error);
+}
+
+.hint {
+  font-size: 12px;
+  margin-top: 8px;
+}
