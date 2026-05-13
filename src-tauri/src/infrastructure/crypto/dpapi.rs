@@ -59,10 +59,6 @@ impl DpapiCrypto {
             let encrypted =
                 std::slice::from_raw_parts(output.pbData, output.cbData as usize).to_vec();
 
-            windows::Win32::System::Memory::LocalFree(Some(
-                windows::Win32::Foundation::HLOCAL(output.pbData as *mut _),
-            ));
-
             Ok(encrypted)
         }
     }
@@ -103,10 +99,6 @@ impl DpapiCrypto {
 
             let decrypted =
                 std::slice::from_raw_parts(output.pbData, output.cbData as usize).to_vec();
-
-            windows::Win32::System::Memory::LocalFree(Some(
-                windows::Win32::Foundation::HLOCAL(output.pbData as *mut _),
-            ));
 
             Ok(decrypted)
         }

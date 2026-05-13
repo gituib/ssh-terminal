@@ -21,9 +21,8 @@ impl FileLogger {
     }
 
     pub fn log(&self, level: &str, message: &str) {
-        let timestamp = OffsetDateTime::now_local()
-            .unwrap_or_else(|_| OffsetDateTime::now_utc())
-            .format("%Y-%m-%d %H:%M:%S%.3f");
+        let timestamp = OffsetDateTime::now_utc()
+            .format("%Y-%m-%d %H:%M:%S%.3f UTC");
 
         let entry = format!("[{}] [{}] {}\n", timestamp, level, message);
 
