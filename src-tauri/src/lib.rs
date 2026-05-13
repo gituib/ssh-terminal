@@ -3,6 +3,7 @@ mod error;
 mod infrastructure;
 mod modules;
 
+use tauri::Manager;
 use modules::connection::ConnectionService;
 use modules::settings::SettingsService;
 use modules::ssh::SshSessionManager;
@@ -21,8 +22,9 @@ pub fn run() {
         .manage(SettingsService::new())
         .manage(SshSessionManager::new())
         .setup(|app| {
-            let window = app.get_webview_window("main").unwrap();
-            window.set_title("SSH Terminal").unwrap();
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.set_title("SSH Terminal");
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

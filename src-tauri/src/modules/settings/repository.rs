@@ -9,15 +9,6 @@ struct AppConfig {
     settings: Settings,
 }
 
-impl AppConfig {
-    fn new() -> Self {
-        Self {
-            connections: Vec::new(),
-            settings: Settings::default(),
-        }
-    }
-}
-
 pub struct SettingsRepository {
     paths: AppPaths,
 }
@@ -40,26 +31,5 @@ impl SettingsRepository {
         FileStorage::write(&self.paths.config_file, &config)?;
         info!("Settings saved");
         Ok(())
-    }
-}
-
-pub struct SettingsService {
-    repository: SettingsRepository,
-}
-
-impl SettingsService {
-    pub fn new() -> Self {
-        Self {
-            repository: SettingsRepository::new(),
-        }
-    }
-
-    pub fn get(&self) -> Result<Settings> {
-        self.repository.get()
-    }
-
-    pub fn update(&self, settings: Settings) -> Result<Settings> {
-        self.repository.save(&settings)?;
-        Ok(settings)
     }
 }

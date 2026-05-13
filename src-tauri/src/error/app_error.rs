@@ -1,6 +1,8 @@
+use serde::Serialize;
 use thiserror::Error;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Serialize)]
+#[serde(tag = "kind", content = "message")]
 pub enum AppError {
     #[error("Connection not found: {0}")]
     ConnectionNotFound(String),
@@ -21,8 +23,20 @@ pub enum AppError {
     ValidationError(String),
 
     #[error("IO error: {0}")]
-    IoError(#[from] std::io::Error),
+    IoError(String),
 
     #[error("JSON error: {0}")]
-    JsonError(#[from] serde_json::Error),
+    JsonError(String),
+}
+
+impl From<std::io::Error> for AppError {
+    fn from(err: std::io::Error) -> Self {
+        AppError::IoError(err.to_string())
+    }
+}
+
+impl From<serde_json::Error> for AppError {
+    fn from(err: serde_json::Error) -> Self {
+        AppError::JsonError(err.to_string())
+    }
 }

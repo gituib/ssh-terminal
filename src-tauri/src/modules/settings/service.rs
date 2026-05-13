@@ -1,15 +1,15 @@
 use crate::error::Result;
 use super::types::Settings;
-use super::repository::SettingsService as Repo;
+use super::repository::SettingsRepository;
 
 pub struct SettingsService {
-    repository: Repo,
+    repository: SettingsRepository,
 }
 
 impl SettingsService {
     pub fn new() -> Self {
         Self {
-            repository: Repo::new(),
+            repository: SettingsRepository::new(),
         }
     }
 
