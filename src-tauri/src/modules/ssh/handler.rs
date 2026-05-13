@@ -36,7 +36,7 @@ impl Handler for SshHandler {
 
     async fn data(
         &mut self,
-        channel: ChannelId,
+        _channel: ChannelId,
         data: &[u8],
         _session: &mut russh::client::Session,
     ) -> Result<(), Self::Error> {
@@ -52,8 +52,8 @@ impl Handler for SshHandler {
 
     async fn extended_data(
         &mut self,
-        channel: ChannelId,
-        ext: u32,
+        _channel: ChannelId,
+        _ext: u32,
         data: &[u8],
         _session: &mut russh::client::Session,
     ) -> Result<(), Self::Error> {
