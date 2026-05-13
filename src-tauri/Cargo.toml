@@ -30,6 +30,10 @@ directories = "5.0"
 base64 = "0.21"
 time = "0.3"
 
+[target.'cfg(not(windows))'.dependencies]
+aes-gcm = "0.10"
+sha2 = "0.10"
+
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.52", features = [
     "Win32_Foundation",

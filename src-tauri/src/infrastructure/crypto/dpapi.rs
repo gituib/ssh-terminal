@@ -105,17 +105,43 @@ impl DpapiCrypto {
     }
 
     #[cfg(not(windows))]
-    fn encrypt(&self, _data: &[u8]) -> Result<Vec<u8>> {
-        Err(crate::AppError::CryptoError(
-            "DPAPI is only available on Windows".to_string(),
-        ))
+    fn encrypt(&self, data: &[u8]) -> Result<Vec<u8>> {
+        use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
+        use aes_gcm::aead::Aead;
+        use sha2::{Sha256, Digest};
+
+        let key_bytes = Sha256::digest(b"ssh-terminal-encryption-key");
+        let cipher = Aes256Gcm::new_from_slice(&key_bytes)
+            .map_err(|e| crate::AppError::CryptoError(e.to_string()))?;
+
+        let nonce_bytes: [u8; 12] = [0u8; 12];
+        let nonce = Nonce::from_slice(&nonce_bytes);
+
+        let encrypted = cipher
+            .encrypt(nonce, data)
+            .map_err(|e| crate::AppError::CryptoError(e.to_string()))?;
+
+        Ok(encrypted)
     }
 
     #[cfg(not(windows))]
-    fn decrypt(&self, _data: &[u8]) -> Result<Vec<u8>> {
-        Err(crate::AppError::CryptoError(
-            "DPAPI is only available on Windows".to_string(),
-        ))
+    fn decrypt(&self, data: &[u8]) -> Result<Vec<u8>> {
+        use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
+        use aes_gcm::aead::Aead;
+        use sha2::{Sha256, Digest};
+
+        let key_bytes = Sha256::digest(b"ssh-terminal-encryption-key");
+        let cipher = Aes256Gcm::new_from_slice(&key_bytes)
+            .map_err(|e| crate::AppError::CryptoError(e.to_string()))?;
+
+        let nonce_bytes: [u8; 12] = [0u8; 12];
+        let nonce = Nonce::from_slice(&nonce_bytes);
+
+        let decrypted = cipher
+            .decrypt(nonce, data)
+            .map_err(|e| crate::AppError::CryptoError(e.to_string()))?;
+
+        Ok(decrypted)
     }
 }
 
