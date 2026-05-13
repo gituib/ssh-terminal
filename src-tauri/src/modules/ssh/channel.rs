@@ -12,6 +12,7 @@ pub struct ShellManager {
     shells: Arc<RwLock<Vec<ShellChannel>>>,
 }
 
+#[allow(dead_code)]
 impl ShellManager {
     pub fn new() -> Self {
         Self {
