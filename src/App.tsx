@@ -14,7 +14,7 @@ function App() {
 
   const handleConnect = (connection: Connection) => {
     setActiveConnectionId(connection.id);
-    setActiveSessionId(connection.id);
+    setActiveSessionId(null);
     setActiveView('terminal');
   };
 
@@ -42,7 +42,11 @@ function App() {
 
         <div className={styles.content}>
           {activeView === 'terminal' ? (
-            <TerminalView sessionId={activeSessionId} connectionId={activeConnectionId} />
+            <TerminalView
+              sessionId={activeSessionId}
+              connectionId={activeConnectionId}
+              onSessionCreated={setActiveSessionId}
+            />
           ) : (
             <SettingsPanel />
           )}

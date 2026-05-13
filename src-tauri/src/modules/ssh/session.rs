@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
+use tauri::AppHandle;
 
 pub struct SshSessionManager {
     sessions: Arc<RwLock<HashMap<String, client::Handle<SshHandler>>>>,
@@ -21,7 +22,7 @@ impl SshSessionManager {
         }
     }
 
-    pub async fn connect(&self, connection: &Connection) -> Result<String> {
+    pub async fn connect(&self, app: AppHandle, connection: &Connection) -> Result<String> {
         let session_id = Uuid::new_v4().to_string();
 
         let config = client::Config {
@@ -29,7 +30,7 @@ impl SshSessionManager {
             ..Default::default()
         };
 
-        let handler = SshHandler::new();
+        let (handler, _channel_rx) = SshHandler::new(session_id.clone(), app);
 
         let mut handle = client::connect(
             Arc::new(config),
@@ -78,7 +79,20 @@ impl SshSessionManager {
             .map_err(|e| AppError::SshConnectionFailed(e.to_string()))?;
 
         channel
-            .exec(true, "bash")
+            .request_pty(
+                false,
+                "xterm-256color",
+                80,
+                24,
+                0,
+                0,
+                &[],
+            )
+            .await
+            .map_err(|e| AppError::SshConnectionFailed(e.to_string()))?;
+
+        channel
+            .request_shell(true)
             .await
             .map_err(|e| AppError::SshConnectionFailed(e.to_string()))?;
 
@@ -106,6 +120,20 @@ impl SshSessionManager {
 
         channel
             .data(std::io::Cursor::new(data))
+            .await
+            .map_err(|e| AppError::SshConnectionFailed(e.to_string()))?;
+
+        Ok(())
+    }
+
+    pub async fn resize(&self, session_id: &str, cols: u32, rows: u32) -> Result<()> {
+        let channels = self.channels.read().await;
+        let channel = channels
+            .get(session_id)
+            .ok_or_else(|| AppError::SshConnectionFailed("Session not found".to_string()))?;
+
+        channel
+            .window_change(cols, rows, 0, 0)
             .await
             .map_err(|e| AppError::SshConnectionFailed(e.to_string()))?;
 

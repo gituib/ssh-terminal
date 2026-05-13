@@ -1,11 +1,14 @@
-import { useCallback } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import type { TerminalData } from '../types';
 
-export const useTerminal = (sessionId: string | null) => {
+export const useTerminal = (
+  sessionId: string | null,
+  onTerminalData?: (data: string) => void,
+) => {
   const { t } = useTranslation();
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +20,15 @@ export const useTerminal = (sessionId: string | null) => {
     }
 
     const setupListeners = async () => {
-      const unlistenData = await listen<TerminalData>('terminal:data', () => {
+      const unlistenData = await listen<TerminalData>('terminal:data', (event) => {
+        if (event.payload.sessionId === sessionId && onTerminalData) {
+          try {
+            const decoded = atob(event.payload.data);
+            onTerminalData(decoded);
+          } catch {
+            onTerminalData(event.payload.data);
+          }
+        }
       });
 
       const unlistenDisconnect = await listen<string>('ssh:disconnected', (event) => {
@@ -26,31 +37,31 @@ export const useTerminal = (sessionId: string | null) => {
         }
       });
 
-      const unlistenConnected = await listen<string>('ssh:connected', () => {
-      });
-
-      listenersRef.current = [unlistenData, unlistenDisconnect, unlistenConnected];
+      listenersRef.current = [unlistenData, unlistenDisconnect];
     };
 
     setupListeners();
 
     return () => {
       listenersRef.current.forEach((unlisten) => unlisten());
+      listenersRef.current = [];
     };
-  }, [sessionId, t]);
+  }, [sessionId, onTerminalData, t]);
 
-  const connect = useCallback(async (connectionId: string) => {
+  const connect = useCallback(async (connectionId: string): Promise<string | null> => {
     setIsConnecting(true);
     setError(null);
 
     try {
-      await invoke<string>('ssh_connect', { id: connectionId });
+      const resultSessionId = await invoke<string>('ssh_connect', { id: connectionId });
+      return resultSessionId;
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('terminal.connectFailed'));
+      setError(err instanceof Error ? err.message : String(err));
+      return null;
     } finally {
       setIsConnecting(false);
     }
-  }, [t]);
+  }, []);
 
   const disconnect = useCallback(async () => {
     if (!sessionId) return;
@@ -73,11 +84,22 @@ export const useTerminal = (sessionId: string | null) => {
     }
   }, [sessionId]);
 
+  const resize = useCallback(async (cols: number, rows: number) => {
+    if (!sessionId) return;
+
+    try {
+      await invoke('ssh_resize', { sessionId, cols, rows });
+    } catch (err) {
+      console.error('Resize error:', err);
+    }
+  }, [sessionId]);
+
   return {
     isConnecting,
     error,
     connect,
     disconnect,
     sendData,
+    resize,
   };
 };

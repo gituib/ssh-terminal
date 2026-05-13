@@ -25,11 +25,8 @@ pub async fn ssh_connect(
         .map_err(|e| e.to_string())?;
 
     let session_id = session_manager
-        .connect(&connection)
+        .connect(app, &connection)
         .await
-        .map_err(|e| e.to_string())?;
-
-    app.emit("ssh:connected", &session_id)
         .map_err(|e| e.to_string())?;
 
     info!("Connected successfully: {}", session_id);
@@ -70,6 +67,21 @@ pub async fn ssh_send_data(
 
     session_manager
         .write(&session_id, &decoded)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn ssh_resize(
+    session_manager: State<'_, SshSessionManager>,
+    session_id: String,
+    cols: u32,
+    rows: u32,
+) -> Result<(), String> {
+    session_manager
+        .resize(&session_id, cols, rows)
         .await
         .map_err(|e| e.to_string())?;
 
