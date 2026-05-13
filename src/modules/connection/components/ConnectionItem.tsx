@@ -1,4 +1,5 @@
 import { FC } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Connection } from '../types';
 import styles from './ConnectionItem.module.css';
 
@@ -15,6 +16,8 @@ export const ConnectionItem: FC<ConnectionItemProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className={styles.item}>
       <div className={styles.info} onClick={() => onConnect(connection)}>
@@ -28,19 +31,19 @@ export const ConnectionItem: FC<ConnectionItemProps> = ({
           className={styles.connectBtn}
           onClick={() => onConnect(connection)}
         >
-          连接
+          {t('connection.connect')}
         </button>
         <button
           className={styles.editBtn}
           onClick={() => onEdit(connection)}
         >
-          编辑
+          {t('connection.edit')}
         </button>
         <button
           className={styles.deleteBtn}
           onClick={() => onDelete(connection.id)}
         >
-          删除
+          {t('connection.delete')}
         </button>
       </div>
     </div>

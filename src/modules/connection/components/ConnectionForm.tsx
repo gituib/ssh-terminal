@@ -1,4 +1,5 @@
 import { FC, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Connection, ConnectionInput, AuthType } from '../types';
 import styles from './ConnectionForm.module.css';
 
@@ -13,6 +14,7 @@ export const ConnectionForm: FC<ConnectionFormProps> = ({
   onSubmit,
   onCancel,
 }) => {
+  const { t } = useTranslation();
   const [name, setName] = useState(connection?.name || '');
   const [host, setHost] = useState(connection?.host || '');
   const [port, setPort] = useState(connection?.port || 22);
@@ -39,29 +41,29 @@ export const ConnectionForm: FC<ConnectionFormProps> = ({
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
       <div className={styles.field}>
-        <label>名称</label>
+        <label>{t('connectionForm.name')}</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="我的服务器"
+          placeholder={t('connectionForm.namePlaceholder')}
           required
         />
       </div>
 
       <div className={styles.row}>
         <div className={styles.field}>
-          <label>主机</label>
+          <label>{t('connectionForm.host')}</label>
           <input
             type="text"
             value={host}
             onChange={(e) => setHost(e.target.value)}
-            placeholder="192.168.1.100"
+            placeholder={t('connectionForm.hostPlaceholder')}
             required
           />
         </div>
         <div className={styles.field} style={{ width: '100px' }}>
-          <label>端口</label>
+          <label>{t('connectionForm.port')}</label>
           <input
             type="number"
             value={port}
@@ -74,66 +76,66 @@ export const ConnectionForm: FC<ConnectionFormProps> = ({
       </div>
 
       <div className={styles.field}>
-        <label>用户名</label>
+        <label>{t('connectionForm.username')}</label>
         <input
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          placeholder="root"
+          placeholder={t('connectionForm.usernamePlaceholder')}
           required
         />
       </div>
 
       <div className={styles.field}>
-        <label>认证方式</label>
+        <label>{t('connectionForm.authType')}</label>
         <select
           value={authType}
           onChange={(e) => setAuthType(e.target.value as AuthType)}
         >
-          <option value="password">密码</option>
-          <option value="key">密钥文件</option>
+          <option value="password">{t('connectionForm.authPassword')}</option>
+          <option value="key">{t('connectionForm.authKey')}</option>
         </select>
       </div>
 
       {authType === 'password' ? (
         <div className={styles.field}>
-          <label>密码</label>
+          <label>{t('connectionForm.password')}</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder={connection ? '(不修改请留空)' : '输入密码'}
+            placeholder={connection ? t('connectionForm.passwordEditPlaceholder') : t('connectionForm.passwordPlaceholder')}
           />
         </div>
       ) : (
         <div className={styles.field}>
-          <label>密钥文件路径</label>
+          <label>{t('connectionForm.keyPath')}</label>
           <input
             type="text"
             value={keyPath}
             onChange={(e) => setKeyPath(e.target.value)}
-            placeholder="C:\\Users\\.ssh\\id_rsa"
+            placeholder={t('connectionForm.keyPathPlaceholder')}
             required
           />
         </div>
       )}
 
       <div className={styles.field}>
-        <label>分组 (可选)</label>
+        <label>{t('connectionForm.group')}</label>
         <input
           type="text"
           value={group}
           onChange={(e) => setGroup(e.target.value)}
-          placeholder="生产环境"
+          placeholder={t('connectionForm.groupPlaceholder')}
         />
       </div>
 
       <div className={styles.actions}>
         <button type="button" onClick={onCancel}>
-          取消
+          {t('connectionForm.cancel')}
         </button>
         <button type="submit" className={styles.submitBtn}>
-          {connection ? '保存' : '创建'}
+          {connection ? t('connectionForm.save') : t('connectionForm.create')}
         </button>
       </div>
     </form>

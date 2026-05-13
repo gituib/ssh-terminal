@@ -1,4 +1,5 @@
 import { FC, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ConnectionList } from './ConnectionList';
 import { ConnectionForm } from './ConnectionForm';
 import { Modal } from '@/shared/components/Modal';
@@ -11,6 +12,7 @@ interface ConnectionSidebarProps {
 }
 
 export const ConnectionSidebar: FC<ConnectionSidebarProps> = ({ onConnect }) => {
+  const { t } = useTranslation();
   const {
     connections,
     isLoading,
@@ -43,7 +45,7 @@ export const ConnectionSidebar: FC<ConnectionSidebarProps> = ({ onConnect }) => 
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('确定要删除这个连接吗？')) {
+    if (confirm(t('connection.deleteConfirm'))) {
       await deleteConnection(id);
     }
   };
@@ -51,9 +53,9 @@ export const ConnectionSidebar: FC<ConnectionSidebarProps> = ({ onConnect }) => 
   return (
     <div className={styles.sidebar}>
       <div className={styles.header}>
-        <h2>连接</h2>
+        <h2>{t('connection.title')}</h2>
         <button className={styles.addBtn} onClick={handleCreate}>
-          + 新建
+          {t('connection.addNew')}
         </button>
       </div>
 

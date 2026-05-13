@@ -1,4 +1,5 @@
 import { FC } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ConnectionItem } from './ConnectionItem';
 import type { Connection } from '../types';
 import styles from './ConnectionList.module.css';
@@ -20,10 +21,12 @@ export const ConnectionList: FC<ConnectionListProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const { t } = useTranslation();
+
   if (isLoading) {
     return (
       <div className={styles.loading}>
-        <p>加载中...</p>
+        <p>{t('connection.loading')}</p>
       </div>
     );
   }
@@ -39,8 +42,8 @@ export const ConnectionList: FC<ConnectionListProps> = ({
   if (connections.length === 0) {
     return (
       <div className={styles.empty}>
-        <p>暂无连接</p>
-        <p className={styles.hint}>点击上方"新建"添加服务器连接</p>
+        <p>{t('connection.empty')}</p>
+        <p className={styles.hint}>{t('connection.emptyHint')}</p>
       </div>
     );
   }

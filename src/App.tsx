@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ConnectionSidebar } from '@/modules/connection/components/ConnectionSidebar';
 import { TerminalView } from '@/modules/terminal/components/TerminalView';
 import { SettingsPanel } from '@/modules/settings/components/SettingsPanel';
@@ -6,6 +7,7 @@ import type { Connection } from '@/modules/connection/types';
 import styles from './App.module.css';
 
 function App() {
+  const { t } = useTranslation();
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [activeConnectionId, setActiveConnectionId] = useState<string | undefined>(undefined);
   const [activeView, setActiveView] = useState<'terminal' | 'settings'>('terminal');
@@ -28,13 +30,13 @@ function App() {
             className={`${styles.navBtn} ${activeView === 'terminal' ? styles.active : ''}`}
             onClick={() => setActiveView('terminal')}
           >
-            终端
+            {t('app.terminal')}
           </button>
           <button
             className={`${styles.navBtn} ${activeView === 'settings' ? styles.active : ''}`}
             onClick={() => setActiveView('settings')}
           >
-            设置
+            {t('app.settings')}
           </button>
         </nav>
 

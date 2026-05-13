@@ -1,4 +1,5 @@
 import { FC, useRef, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Terminal, TerminalHandle } from '../xterm/Terminal';
 import { useTerminal } from '../hooks/useTerminal';
 import styles from './TerminalView.module.css';
@@ -9,6 +10,7 @@ interface TerminalViewProps {
 }
 
 export const TerminalView: FC<TerminalViewProps> = ({ sessionId, connectionId }) => {
+  const { t } = useTranslation();
   const terminalRef = useRef<TerminalHandle>(null);
   const { isConnecting, error, disconnect, sendData, connect } = useTerminal(sessionId);
 
@@ -29,7 +31,7 @@ export const TerminalView: FC<TerminalViewProps> = ({ sessionId, connectionId })
   if (!sessionId && !connectionId) {
     return (
       <div className={styles.placeholder}>
-        <p>选择一个连接以开始</p>
+        <p>{t('terminal.selectConnection')}</p>
       </div>
     );
   }
@@ -37,7 +39,7 @@ export const TerminalView: FC<TerminalViewProps> = ({ sessionId, connectionId })
   if (isConnecting) {
     return (
       <div className={styles.placeholder}>
-        <p>正在连接...</p>
+        <p>{t('terminal.connecting')}</p>
       </div>
     );
   }
@@ -46,7 +48,7 @@ export const TerminalView: FC<TerminalViewProps> = ({ sessionId, connectionId })
     return (
       <div className={styles.error}>
         <p>{error}</p>
-        <button onClick={handleDisconnect}>重试</button>
+        <button onClick={handleDisconnect}>{t('terminal.retry')}</button>
       </div>
     );
   }

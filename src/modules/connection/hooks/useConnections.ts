@@ -1,8 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { connectionService } from '../services/connectionService';
 import type { Connection, ConnectionInput } from '../types';
 
 export const useConnections = () => {
+  const { t } = useTranslation();
   const [connections, setConnections] = useState<Connection[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -14,11 +16,11 @@ export const useConnections = () => {
       const data = await connectionService.getAll();
       setConnections(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '获取连接失败');
+      setError(err instanceof Error ? err.message : t('connection.fetchError'));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const createConnection = useCallback(async (input: ConnectionInput) => {
     await connectionService.create(input);
