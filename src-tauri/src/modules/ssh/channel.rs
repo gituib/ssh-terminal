@@ -1,11 +1,13 @@
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+#[allow(dead_code)]
 pub struct ShellChannel {
     pub session_id: String,
     pub channel_id: u32,
 }
 
+#[allow(dead_code)]
 pub struct ShellManager {
     shells: Arc<RwLock<Vec<ShellChannel>>>,
 }

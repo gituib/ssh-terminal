@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use tracing::info;
 
 #[derive(Debug, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct TerminalPayload {
     pub session_id: String,
     pub data: String,

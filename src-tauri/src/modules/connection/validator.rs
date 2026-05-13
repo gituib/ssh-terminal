@@ -13,7 +13,7 @@ impl ConnectionValidator {
             return Err(AppError::ValidationError("Host is required".to_string()));
         }
 
-        if input.port == 0 || input.port > 65535 {
+        if input.port == 0 {
             return Err(AppError::ValidationError(
                 "Port must be between 1 and 65535".to_string(),
             ));

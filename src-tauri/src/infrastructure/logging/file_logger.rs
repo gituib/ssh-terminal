@@ -5,10 +5,12 @@ use std::sync::Mutex;
 use time::OffsetDateTime;
 use time::format_description;
 
+#[allow(dead_code)]
 pub struct FileLogger {
     file: Mutex<File>,
 }
 
+#[allow(dead_code)]
 impl FileLogger {
     pub fn new<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
         let file = OpenOptions::new()

@@ -82,6 +82,7 @@ impl ConnectionService {
         self.repository.delete(id)
     }
 
+    #[allow(dead_code)]
     pub fn decrypt_password(&self, encrypted: &str) -> Result<String> {
         self.crypto.decrypt_base64(encrypted)
     }

@@ -1,6 +1,7 @@
 use directories::ProjectDirs;
 use std::path::PathBuf;
 
+#[allow(dead_code)]
 pub struct AppPaths {
     pub config_dir: PathBuf,
     pub config_file: PathBuf,
