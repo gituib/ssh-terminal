@@ -5,28 +5,23 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { useEffect } from 'react';
 import type { TerminalData } from '../types';
 
-export const useTerminal = (
-  sessionId: string | null,
-  onTerminalData?: (data: string) => void,
-) => {
+export const useTerminal = () => {
   const { t } = useTranslation();
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const writeRef = useRef<((data: string) => void) | null>(null);
   const listenersRef = useRef<UnlistenFn[]>([]);
 
   useEffect(() => {
-    if (!sessionId) {
-      return;
-    }
-
     const setupListeners = async () => {
       const unlistenData = await listen<TerminalData>('terminal:data', (event) => {
-        if (event.payload.sessionId === sessionId && onTerminalData) {
+        if (writeRef.current) {
           try {
             const decoded = atob(event.payload.data);
-            onTerminalData(decoded);
+            writeRef.current(decoded);
           } catch {
-            onTerminalData(event.payload.data);
+            writeRef.current(event.payload.data);
           }
         }
       });
@@ -34,6 +29,7 @@ export const useTerminal = (
       const unlistenDisconnect = await listen<string>('ssh:disconnected', (event) => {
         if (event.payload === sessionId) {
           setError(t('terminal.disconnected'));
+          setSessionId(null);
         }
       });
 
@@ -46,17 +42,23 @@ export const useTerminal = (
       listenersRef.current.forEach((unlisten) => unlisten());
       listenersRef.current = [];
     };
-  }, [sessionId, onTerminalData, t]);
+  }, [t]);
 
-  const connect = useCallback(async (connectionId: string): Promise<string | null> => {
+  const setWriteFn = useCallback((fn: ((data: string) => void) | null) => {
+    writeRef.current = fn;
+  }, []);
+
+  const connect = useCallback(async (connectionId: string) => {
     setIsConnecting(true);
     setError(null);
 
     try {
       const resultSessionId = await invoke<string>('ssh_connect', { id: connectionId });
+      setSessionId(resultSessionId);
       return resultSessionId;
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg);
       return null;
     } finally {
       setIsConnecting(false);
@@ -68,6 +70,7 @@ export const useTerminal = (
 
     try {
       await invoke('ssh_disconnect', { sessionId });
+      setSessionId(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('terminal.disconnectFailed'));
     }
@@ -95,11 +98,13 @@ export const useTerminal = (
   }, [sessionId]);
 
   return {
+    sessionId,
     isConnecting,
     error,
     connect,
     disconnect,
     sendData,
     resize,
+    setWriteFn,
   };
 };

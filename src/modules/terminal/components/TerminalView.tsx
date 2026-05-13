@@ -5,37 +5,35 @@ import { useTerminal } from '../hooks/useTerminal';
 import styles from './TerminalView.module.css';
 
 interface TerminalViewProps {
-  sessionId: string | null;
   connectionId?: string;
-  onSessionCreated?: (sessionId: string) => void;
 }
 
-export const TerminalView: FC<TerminalViewProps> = ({
-  sessionId,
-  connectionId,
-  onSessionCreated,
-}) => {
+export const TerminalView: FC<TerminalViewProps> = ({ connectionId }) => {
   const { t } = useTranslation();
   const terminalRef = useRef<TerminalHandle>(null);
+  const {
+    sessionId,
+    isConnecting,
+    error,
+    connect,
+    disconnect,
+    sendData,
+    setWriteFn,
+  } = useTerminal();
 
-  const handleTerminalData = useCallback((data: string) => {
+  const handleWrite = useCallback((data: string) => {
     terminalRef.current?.write(data);
   }, []);
 
-  const { isConnecting, error, disconnect, sendData, connect } = useTerminal(
-    sessionId,
-    handleTerminalData,
-  );
+  useEffect(() => {
+    setWriteFn(handleWrite);
+  }, [handleWrite, setWriteFn]);
 
   useEffect(() => {
-    if (connectionId && !sessionId) {
-      connect(connectionId).then((resultSessionId) => {
-        if (resultSessionId && onSessionCreated) {
-          onSessionCreated(resultSessionId);
-        }
-      });
+    if (connectionId && !sessionId && !isConnecting) {
+      connect(connectionId);
     }
-  }, [connectionId, sessionId, connect, onSessionCreated]);
+  }, [connectionId, sessionId, isConnecting, connect]);
 
   const handleData = useCallback(
     (data: string) => {
@@ -44,11 +42,7 @@ export const TerminalView: FC<TerminalViewProps> = ({
     [sendData],
   );
 
-  const handleDisconnect = () => {
-    disconnect();
-  };
-
-  if (!sessionId && !connectionId) {
+  if (!connectionId) {
     return (
       <div className={styles.placeholder}>
         <p>{t('terminal.selectConnection')}</p>
@@ -64,11 +58,11 @@ export const TerminalView: FC<TerminalViewProps> = ({
     );
   }
 
-  if (error) {
+  if (error && !sessionId) {
     return (
       <div className={styles.error}>
         <p>{error}</p>
-        <button onClick={handleDisconnect}>{t('terminal.retry')}</button>
+        <button onClick={() => connect(connectionId)}>{t('terminal.retry')}</button>
       </div>
     );
   }

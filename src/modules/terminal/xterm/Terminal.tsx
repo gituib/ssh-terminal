@@ -1,4 +1,4 @@
-import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+import { useEffect, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { Terminal as XTerm, type ITerminalOptions } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import { WebLinksAddon } from 'xterm-addon-web-links';
@@ -8,6 +8,7 @@ import styles from './Terminal.module.css';
 export interface TerminalHandle {
   write: (data: string) => void;
   clear: () => void;
+  focus: () => void;
 }
 
 interface TerminalProps {
@@ -20,6 +21,9 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(
     const containerRef = useRef<HTMLDivElement>(null);
     const terminalRef = useRef<XTerm | null>(null);
     const fitAddonRef = useRef<FitAddon | null>(null);
+    const onDataRef = useRef(onData);
+
+    onDataRef.current = onData;
 
     useEffect(() => {
       if (!containerRef.current) return;
@@ -49,7 +53,9 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(
       terminal.open(containerRef.current);
       fitAddon.fit();
 
-      terminal.onData(onData);
+      const dataDisposable = terminal.onData((data) => {
+        onDataRef.current(data);
+      });
 
       terminalRef.current = terminal;
       fitAddonRef.current = fitAddon;
@@ -59,12 +65,16 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(
       };
 
       window.addEventListener('resize', handleResize);
+      terminal.focus();
 
       return () => {
         window.removeEventListener('resize', handleResize);
+        dataDisposable.dispose();
         terminal.dispose();
+        terminalRef.current = null;
+        fitAddonRef.current = null;
       };
-    }, [onData, options]);
+    }, []);
 
     useImperativeHandle(ref, () => ({
       write: (data: string) => {
@@ -72,6 +82,9 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(
       },
       clear: () => {
         terminalRef.current?.clear();
+      },
+      focus: () => {
+        terminalRef.current?.focus();
       },
     }));
 

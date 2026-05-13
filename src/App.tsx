@@ -8,13 +8,11 @@ import styles from './App.module.css';
 
 function App() {
   const { t } = useTranslation();
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [activeConnectionId, setActiveConnectionId] = useState<string | undefined>(undefined);
   const [activeView, setActiveView] = useState<'terminal' | 'settings'>('terminal');
 
   const handleConnect = (connection: Connection) => {
     setActiveConnectionId(connection.id);
-    setActiveSessionId(null);
     setActiveView('terminal');
   };
 
@@ -42,11 +40,7 @@ function App() {
 
         <div className={styles.content}>
           {activeView === 'terminal' ? (
-            <TerminalView
-              sessionId={activeSessionId}
-              connectionId={activeConnectionId}
-              onSessionCreated={setActiveSessionId}
-            />
+            <TerminalView connectionId={activeConnectionId} />
           ) : (
             <SettingsPanel />
           )}
