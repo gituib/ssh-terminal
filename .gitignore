@@ -1,7 +1,7 @@
 node_modules/
 .pnp
 .pnp.js
-dist/
+dist/assets/
 dist-ssr/
 *.local
 .vscode/
