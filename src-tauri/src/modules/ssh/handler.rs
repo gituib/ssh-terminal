@@ -1,5 +1,6 @@
+use async_trait::async_trait;
 use russh::client::Handler;
-use russh_keys::PublicKey;
+use russh_keys::key::PublicKey;
 
 pub struct SshHandler;
 
@@ -9,6 +10,7 @@ impl SshHandler {
     }
 }
 
+#[async_trait]
 impl Handler for SshHandler {
     type Error = russh::Error;
 
