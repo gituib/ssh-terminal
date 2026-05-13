@@ -1,24 +1,20 @@
-use russh::client::{Handler, Session};
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use crate::error::Result;
+use russh::client::Handler;
+use russh_keys::PublicKey;
 
-pub struct SshHandler {
-    pub session_id: String,
-}
+pub struct SshHandler;
 
 impl SshHandler {
-    pub fn new(session_id: String) -> Self {
-        Self { session_id }
+    pub fn new() -> Self {
+        Self
     }
 }
 
 impl Handler for SshHandler {
     type Error = russh::Error;
 
-    fn check_server_key(
+    async fn check_server_key(
         &mut self,
-        _server_public_key: &russh::key::PublicKey,
+        _server_public_key: &PublicKey,
     ) -> Result<bool, Self::Error> {
         Ok(true)
     }

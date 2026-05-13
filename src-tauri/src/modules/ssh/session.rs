@@ -1,6 +1,7 @@
 use crate::error::{AppError, Result};
-use crate::modules::connection::{Connection, AuthType};
+use crate::modules::connection::{AuthType, Connection};
 use crate::infrastructure::crypto::DpapiCrypto;
+use crate::modules::ssh::handler::SshHandler;
 use russh::client;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -8,13 +9,15 @@ use tokio::sync::RwLock;
 use uuid::Uuid;
 
 pub struct SshSessionManager {
-    sessions: Arc<RwLock<HashMap<String, client::Handle>>>,
+    sessions: Arc<RwLock<HashMap<String, client::Handle<SshHandler>>>>,
+    channels: Arc<RwLock<HashMap<String, russh::Channel<russh::client::Msg>>>>,
 }
 
 impl SshSessionManager {
     pub fn new() -> Self {
         Self {
             sessions: Arc::new(RwLock::new(HashMap::new())),
+            channels: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
@@ -26,10 +29,9 @@ impl SshSessionManager {
             ..Default::default()
         };
 
-        let config = Arc::new(config);
-        let handler = crate::modules::ssh::handler::SshHandler::new(session_id.clone());
+        let handler = SshHandler::new();
 
-        let handle = client::connect(
+        let mut handle = client::connect(
             Arc::new(config),
             (connection.host.as_str(), connection.port),
             handler,
@@ -37,7 +39,7 @@ impl SshSessionManager {
         .await
         .map_err(|e| AppError::SshConnectionFailed(e.to_string()))?;
 
-        let auth_result = match connection.auth_type {
+        let auth_ok = match connection.auth_type {
             AuthType::Password => {
                 if let Some(ref encrypted_pwd) = connection.password {
                     let crypto = DpapiCrypto::new();
@@ -45,6 +47,7 @@ impl SshSessionManager {
                     handle
                         .authenticate_password(&connection.username, &password)
                         .await
+                        .map_err(|e| AppError::SshConnectionFailed(e.to_string()))?
                 } else {
                     return Err(AppError::InvalidCredentials);
                 }
@@ -53,44 +56,56 @@ impl SshSessionManager {
                 if let Some(ref key_path) = connection.key_path {
                     let key_content = std::fs::read_to_string(key_path)
                         .map_err(|e| AppError::CryptoError(e.to_string()))?;
+                    let key_pair = russh_keys::decode_secret_key(&key_content, None)
+                        .map_err(|e| AppError::CryptoError(e.to_string()))?;
                     handle
-                        .authenticate_publickey(
-                            &connection.username,
-                            russh_keys::decode_secret_key(&key_content, None)
-                                .map_err(|e| AppError::CryptoError(e.to_string()))?,
-                        )
+                        .authenticate_publickey(&connection.username, Arc::new(key_pair))
                         .await
+                        .map_err(|e| AppError::SshConnectionFailed(e.to_string()))?
                 } else {
                     return Err(AppError::InvalidCredentials);
                 }
             }
         };
 
-        if !auth_result {
+        if !auth_ok {
             return Err(AppError::InvalidCredentials);
         }
 
+        let channel = handle
+            .channel_open_session()
+            .await
+            .map_err(|e| AppError::SshConnectionFailed(e.to_string()))?;
+
+        channel
+            .exec(true, "bash")
+            .await
+            .map_err(|e| AppError::SshConnectionFailed(e.to_string()))?;
+
         self.sessions.write().await.insert(session_id.clone(), handle);
+        self.channels.write().await.insert(session_id.clone(), channel);
 
         Ok(session_id)
     }
 
     pub async fn disconnect(&self, session_id: &str) -> Result<()> {
         let mut sessions = self.sessions.write().await;
+        let mut channels = self.channels.write().await;
         if let Some(_handle) = sessions.remove(session_id) {
+            channels.remove(session_id);
             tracing::info!("Disconnected session: {}", session_id);
         }
         Ok(())
     }
 
     pub async fn write(&self, session_id: &str, data: &[u8]) -> Result<()> {
-        let sessions = self.sessions.read().await;
-        let handle = sessions
+        let channels = self.channels.read().await;
+        let channel = channels
             .get(session_id)
             .ok_or_else(|| AppError::SshConnectionFailed("Session not found".to_string()))?;
 
-        handle
-            .data(data, russh::ChannelMsg::ExtendedData::None)
+        channel
+            .data(std::io::Cursor::new(data))
             .await
             .map_err(|e| AppError::SshConnectionFailed(e.to_string()))?;
 

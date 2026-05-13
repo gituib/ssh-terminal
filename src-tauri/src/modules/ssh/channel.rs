@@ -1,8 +1,5 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use russh::client::Handle;
-use crate::error::Result;
 
 pub struct ShellChannel {
     pub session_id: String,
